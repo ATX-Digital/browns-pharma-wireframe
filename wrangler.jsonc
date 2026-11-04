@@ -1,0 +1,35 @@
+{
+  "name": "browns-pharmacy-wireframe",
+  "compatibility_date": "2026-09-17",
+  "keep_vars": true,
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [
+    {
+      "pattern": "browns-pharmacy-wireframe.stagingcloud.dev",
+      "custom_domain": true
+    }
+  ],
+  "main": "./addons/content-editor/worker/index.js",
+  "build": {
+    "command": "node scripts/build.mjs"
+  },
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "run_worker_first": true
+  },
+  "d1_databases": [
+    {
+      "binding": "WIREFRAME_CONTENT",
+      "database_name": "wireframe-starter",
+      "database_id": "443fe5d0-0060-4742-a9c4-4d60d4790e93"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "WIREFRAME_MEDIA",
+      "bucket_name": "wireframe-starter"
+    }
+  ]
+}

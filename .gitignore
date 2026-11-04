@@ -1,0 +1,9 @@
+dist/
+.DS_Store
+.wireframe/
+exports/
+node_modules/
+.wrangler/
+.env
+.env.*
+!.env.example

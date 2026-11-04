@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="color-scheme" content="light">
+  <title>Wireframe review</title>
+  <script>try{if(document.cookie.split('; ').includes('wireframe_controls=collapsed'))document.documentElement.classList.add('header-collapsed')}catch{}</script>
+  <link rel="stylesheet" href="assets/viewer.css">
+  <script src="project.js" defer></script>
+  <script src="assets/viewer.js" defer></script>
+</head>
+<body>
+  <header class="review-header">
+    <div class="topbar">
+      <a class="review-brand" href="./" aria-label="Latest wireframe homepage"><span class="brand-symbol" aria-hidden="true">w<span>f</span></span><span><strong id="project-name">Wireframe</strong><small>Architecture & experience review</small></span></a>
+      <div class="controls" role="region" aria-label="Review controls" tabindex="0">
+        <label class="version-label"><span>VERSION</span><select id="version-select" aria-label="Wireframe version"></select></label>
+        <div class="device-toggle" aria-label="Preview device"><button id="desktop" type="button" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="1"/><path d="M8 21h8m-4-4v4"/></svg><span>Desktop</span></button><button id="mobile" type="button" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M10 18h4"/></svg><span>Mobile</span></button></div>
+        <button class="utility editor-toggle" id="editor-toggle" type="button" hidden aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 20 4.2-1 10.9-10.9a2.1 2.1 0 0 0-3-3L5.2 16Z"/><path d="m14.8 6.4 3 3"/></svg><span>Edit content</span></button>
+        <button class="utility" id="activity-toggle" type="button" aria-label="Changes" title="View content changes and conversations" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7M3 3v5h5m4-1v5l3 2"/></svg><span>Changes</span></button>
+        <button class="utility access-toggle" id="access-toggle" type="button" aria-label="Manage access" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6m-3-3h6"/></svg><span>Manage access</span></button>
+        <button class="utility" id="copy-link" type="button" title="Copy this version, page and device"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-2 2m3 6a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l2-2"/></svg><span>Share view</span></button>
+        <button class="utility header-toggle" id="header-toggle" type="button" aria-expanded="true" aria-controls="header-navigation" title="Hide review controls"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg><span>Hide controls</span></button>
+      </div>
+    </div>
+    <div class="navigation-row" id="header-navigation"><div class="groups" aria-label="Page group"><button id="group-pages" aria-pressed="true">Pages</button><button id="group-templates" aria-pressed="false">Templates</button></div><nav id="page-tabs" aria-label="Wireframe pages"></nav><select id="page-select" aria-label="Choose a page or template"></select></div>
+  </header>
+  <main class="workspace" id="workspace">
+    <div class="canvas-column">
+      <div class="canvas-meta"><div><span id="page-number">01</span><span class="divider">/</span><strong id="page-title">Home</strong><span id="template-badge" hidden>Template</span></div><div><span id="dimensions">Desktop</span><button id="comments-toggle" type="button">Comments <span id="comments-count">0</span></button><button id="notes-toggle" aria-expanded="false" aria-controls="review-notes">Page notes <span aria-hidden="true">↗</span></button></div></div>
+      <div id="frame-wrap"><iframe id="preview" title="Website wireframe preview"></iframe></div>
+      <p class="canvas-end">End of page <span aria-hidden="true">↑</span> <button id="back-top">Back to top</button></p>
+    </div>
+    <aside id="review-notes" hidden><div class="notes-heading"><span>REVIEW NOTES</span><button id="close-notes" aria-label="Close review notes">×</button></div><div id="notes-content"></div></aside>
+    <aside id="comments-panel" hidden><div class="notes-heading"><span>CLIENT COMMENTS</span><button id="close-comments" aria-label="Close comments">×</button></div><div id="comments-list"><p>No comments yet.</p></div></aside>
+  </main>
+  <footer class="review-footer"><span class="footer-marker" aria-hidden="true"></span><strong>Wireframe, not final design.</strong><span>This shows the architecture, content hierarchy and feel of the site.</span><span id="footer-version"></span></footer>
+  <div id="announcement" role="status" class="announcement"></div>
+  <div class="floating-action-stack"><button id="floating-editor-toggle" class="floating-action-button floating-editor-toggle" type="button" hidden aria-pressed="false"><span class="floating-action-glyph" aria-hidden="true">✎</span><strong class="floating-action-label">Edit</strong><kbd id="editor-shortcut"></kbd></button><button id="add-comment" class="floating-action-button floating-comment-toggle" type="button" hidden aria-pressed="false"><span class="floating-action-glyph" aria-hidden="true"><svg class="floating-action-icon" viewBox="0 0 24 24"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z"/></svg></span><strong class="floating-action-label">Comment</strong><kbd id="comment-shortcut"></kbd></button></div>
+  <dialog id="content-dialog" class="content-dialog" aria-labelledby="content-dialog-title">
+    <form method="dialog" id="content-form">
+      <div class="content-dialog-head"><div><span>EDIT CONTENT</span><h2 id="content-dialog-title">Text field</h2></div><button value="cancel" aria-label="Close editor">×</button></div>
+      <p id="content-field-key" class="content-field-key" hidden></p>
+      <fieldset id="content-scope-field" class="content-scope-field" hidden><legend>Apply this change to</legend><label><input type="radio" name="content-scope" value="global" checked> Everywhere this item appears</label><label><input type="radio" name="content-scope" value="local"> <span id="content-local-scope-label">This card/block only</span></label></fieldset>
+      <div id="content-text-field"><label for="content-value" id="content-value-label">Content</label><textarea id="content-value" rows="7" maxlength="5000"></textarea></div>
+      <div id="content-url-field" class="content-url-field" hidden><fieldset class="link-mode"><legend>Link destination</legend><label><input type="radio" name="link-mode" value="existing" checked> Existing page or item</label><label><input type="radio" name="link-mode" value="custom"> Custom URL</label></fieldset><div id="link-existing"><input id="link-target-picker" class="link-target-picker" type="search" list="link-target-options" autocomplete="off" aria-label="Search for an existing page or item" aria-describedby="link-target-help" placeholder="Click to browse or type to search"><small id="link-target-help" class="link-target-help">Click anywhere in the field to browse all destinations, or start typing to search.</small></div><div id="link-custom" hidden><input id="content-url" type="text" maxlength="1000" placeholder="https://example.com"></div></div>
+      <datalist id="link-target-options"></datalist>
+      <div id="content-image-field" class="content-image-field" hidden><div id="image-preview-wrap" class="image-preview-wrap" hidden><div id="image-preview" class="image-preview"></div><button id="image-remove" class="image-remove" type="button"><span aria-hidden="true">×</span> Remove image</button></div><div id="image-dropzone" class="image-dropzone" role="button" tabindex="0" aria-controls="content-image" aria-describedby="image-drop-help"><input id="content-image" type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/></svg><strong id="image-drop-title">Drop an image here</strong><span>or click to browse your files</span><small id="image-drop-help">JPEG, PNG, WebP or GIF · Maximum 5 MB</small></div><div id="image-file-meta" class="image-file-meta" hidden><span id="image-file-name"></span><strong id="image-file-status"></strong></div><div id="image-upload-progress" class="image-upload-progress" hidden aria-live="polite"><div><span>Uploading image…</span><strong id="image-upload-percent">0%</strong></div><progress id="image-upload-bar" max="100" value="0">0%</progress></div><label for="content-image-alt">Alternative text</label><input id="content-image-alt" type="text" maxlength="300" placeholder="Describe the image for accessibility"></div>
+      <div id="content-collection-field" class="content-collection-field" hidden><div id="collection-items"></div><button id="collection-add" class="dialog-button" type="button">+ Add item</button></div>
+      <div class="content-meta"><span id="content-count"></span><span id="content-user"></span></div>
+      <p id="content-error" class="content-error" role="alert" hidden></p>
+      <div class="content-actions"><button class="dialog-button" value="cancel">Cancel</button><button class="dialog-button primary" id="content-save" value="default">Save change</button></div>
+      <section class="content-history" aria-labelledby="content-history-title"><div class="content-history-head"><h3 id="content-history-title">Recent changes</h3><span id="history-count"></span></div><button id="history-load-more" class="history-load-more" type="button" hidden>Load 4 more</button><div id="content-history-list"><p>No changes to this field yet.</p></div></section>
+    </form>
+  </dialog>
+  <dialog id="comment-dialog" class="content-dialog comment-dialog" aria-labelledby="comment-dialog-title"><form method="dialog" id="comment-form"><div class="content-dialog-head"><div><span>COMMENT</span><h2 id="comment-dialog-title">Page comment</h2></div><button value="cancel" aria-label="Close comments">×</button></div><button id="comments-refresh" class="comment-reply-button" type="button">Refresh comments</button><div id="comment-thread"><p>No comments here yet.</p></div><div id="comment-compose" hidden><span id="reply-context"></span><button id="reply-cancel" type="button" hidden>Cancel reply</button></div><label id="comment-value-label" for="comment-value">Add a comment</label><textarea id="comment-value" rows="4" maxlength="1500" placeholder="What should change or be considered?"></textarea><p id="comment-error" class="content-error" role="alert" hidden></p><div class="content-actions"><button class="dialog-button" value="cancel">Close</button><button id="comment-save" class="dialog-button primary" value="default">Add comment</button></div></form></dialog>
+  <dialog id="activity-dialog" class="content-dialog activity-dialog" aria-labelledby="activity-title">
+    <div class="activity-body">
+      <div class="content-dialog-head"><div><span>REVIEW HISTORY</span><h2 id="activity-title">Changes</h2></div><button id="activity-close" type="button" aria-label="Close changes">×</button></div>
+      <p class="activity-intro">Content edits and conversations across this wireframe. Open a change to see the full details.</p>
+      <div class="activity-filters"><label>Version<select id="activity-version"><option value="">All versions</option></select></label><label>Show<select id="activity-kind"><option value="">All changes</option><option value="content">Content edits</option><option value="comments">Comments &amp; replies</option></select></label><button id="activity-refresh" class="dialog-button" type="button">Refresh</button></div>
+      <p id="activity-status" role="status"></p><p id="activity-error" class="content-error" role="alert" hidden></p>
+      <div id="activity-list"></div><button id="activity-more" class="history-load-more" type="button" hidden>Load older changes</button>
+    </div>
+  </dialog>
+  <dialog id="access-dialog" class="content-dialog access-dialog" aria-labelledby="access-dialog-title">
+    <div class="access-dialog-body">
+      <div class="content-dialog-head"><div><span>ACCESS CONTROL</span><h2 id="access-dialog-title">Manage accounts</h2></div><button id="access-close" type="button" aria-label="Close access manager">×</button></div>
+      <p class="access-intro">Global admins can open and manage every wireframe. Clients below can comment and edit only this wireframe.</p>
+      <p id="access-error" class="content-error" role="alert" hidden></p>
+      <section class="access-section" aria-labelledby="clients-title"><div class="access-section-head"><div><h3 id="clients-title">Clients</h3><p>Access to <strong id="access-project-name"></strong></p></div><span id="client-count" class="access-count">0</span></div><form id="client-add-form" class="access-add-form"><label for="client-email">Client email</label><div><input id="client-email" type="email" autocomplete="email" placeholder="client@example.com" required><button class="dialog-button primary" type="submit">Add client</button></div></form><div id="client-list" class="account-list"></div></section>
+      <section class="access-section" aria-labelledby="admins-title"><div class="access-section-head"><div><h3 id="admins-title">Global admins</h3><p>Shared across every wireframe using this D1 database</p></div><span id="admin-count" class="access-count">0</span></div><form id="admin-add-form" class="access-add-form"><label for="admin-email">Admin email</label><div><input id="admin-email" type="email" autocomplete="email" placeholder="admin@example.com" required><button class="dialog-button primary" type="submit">Add admin</button></div></form><div id="admin-list" class="account-list"></div></section>
+    </div>
+  </dialog>
+  <noscript>This interactive wireframe requires JavaScript. Open a file in the versions directory to inspect its source.</noscript>
+</body>
+</html>

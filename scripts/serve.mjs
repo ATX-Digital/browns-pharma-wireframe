@@ -1,0 +1,12 @@
+import http from 'node:http';
+import { readFile, stat } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
+import path from 'node:path';
+import { handleEditorRequest } from '../addons/content-editor/local-api.mjs';
+import { readProject, serializeProject } from './project.mjs';
+const rootUrl=new URL('../',import.meta.url);
+const root=path.resolve(fileURLToPath(rootUrl));
+const port=Number(process.argv[2]||4173);
+if(!Number.isInteger(port)||port<1024||port>65535)throw new Error('Choose a port from 1024 to 65535.');
+const types={'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.json':'application/json','.txt':'text/plain'};
+http.createServer(async(req,res)=>{try{if(await handleEditorRequest(req,res,root))return;const url=new URL(req.url,'http://localhost');if(url.pathname==='/project.js'){const body=serializeProject(await readProject(rootUrl));res.writeHead(200,{'Content-Type':types['.js'],'Cache-Control':'no-store'});res.end(body);return;}const requested=url.pathname==='/editor/frame.js'?'/addons/content-editor/client/frame.js':url.pathname;const target=path.resolve(root,'.'+decodeURIComponent(requested));if(target!==root&&!target.startsWith(root+path.sep))throw new Error('Outside project');let file=target;if((await stat(file)).isDirectory())file=path.join(file,'index.html');const body=await readFile(file);res.writeHead(200,{'Content-Type':types[path.extname(file)]||'application/octet-stream','Cache-Control':'no-store'});res.end(body);}catch{res.writeHead(404,{'Content-Type':'text/plain'});res.end('Not found');}}).listen(port,'127.0.0.1',()=>console.log('Wireframe preview: http://127.0.0.1:'+port));

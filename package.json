@@ -1,0 +1,20 @@
+{
+  "name": "browns-pharmacy-wireframe",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/serve.mjs",
+    "build": "node scripts/build.mjs",
+    "test:review": "node --test tests/review-features.test.mjs",
+    "project:configure": "node scripts/configure-project.mjs",
+    "deploy:check": "node scripts/deploy-check.mjs",
+    "deploy": "npm run deploy:check && npx wrangler deploy",
+    "version:new": "node scripts/new-version.mjs",
+    "editor:export": "node addons/content-editor/scripts/export-local.mjs",
+    "editor:pull": "node addons/content-editor/scripts/pull-remote.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
