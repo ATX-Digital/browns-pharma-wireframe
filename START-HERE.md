@@ -22,6 +22,8 @@ You may still need to complete a Cloudflare login, authorize a command, or confi
 
 After deployment, the AI should report the live address, permanent project ID, deployed version, and any remaining Cloudflare Access action. It must not call the setup complete until the site is both reachable and protected.
 
+Deploy this project with `npm run deploy` as a **Worker**, not a static Pages upload. The Worker connects the shared storage and enforces project permissions. Configure its public `WIREFRAME_ACCESS_TEAM_DOMAIN` and `WIREFRAME_ACCESS_AUD` values from the Access application so it can verify each login. Without valid authentication configuration the site intentionally denies access. These identifiers are not secrets; sync and Access service-token credentials remain private.
+
 ## What the wireframe builder says
 
 Once the prepared project has been handed to the person building it, they can use normal language. For example:

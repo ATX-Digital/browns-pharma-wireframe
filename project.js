@@ -13,7 +13,7 @@ window.WIREFRAME_PROJECT = {
       "id": "v1",
       "label": "Architecture & customer journeys",
       "file": "versions/v1.html",
-      "date": "2026-10-30"
+      "date": "2026-11-06"
     }
   ]
 };

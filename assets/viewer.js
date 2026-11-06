@@ -203,7 +203,7 @@
   for (const version of versions.slice().reverse()) {
     const option = document.createElement('option');
     option.value = version.id;
-    option.textContent = `${version.id}${version === latest ? ' · Latest' : ''} — ${version.label}`;
+    option.textContent = `${version.displayId || version.id}${version === latest ? ' · Latest' : ''} — ${version.label}`;
     $('version-select').append(option);
   }
 
@@ -240,7 +240,7 @@
   function notes() {
     const page = selected();
     if (!page) return;
-    $('notes-content').innerHTML = `<h2>${esc(page.label)}</h2><p>${esc(page.description)}</p><h3>Page / template type</h3><div class="mapping">${esc(page.wp || 'Page / reusable blocks')}</div><h3>Page behaviour</h3><ul>${(page.notes || []).map(note => `<li>${esc(note)}</li>`).join('')}</ul><h3>Project decisions</h3><ul>${commonNotes.map(note => `<li>${esc(note)}</li>`).join('')}</ul><h3>Snapshot</h3><p>${esc(state.version.id)} · ${esc(state.version.label)}<br>${esc(state.version.date || '')}</p>`;
+    $('notes-content').innerHTML = `<h2>${esc(page.label)}</h2><p>${esc(page.description)}</p><h3>Page / template type</h3><div class="mapping">${esc(page.wp || 'Page / reusable blocks')}</div><h3>Page behaviour</h3><ul>${(page.notes || []).map(note => `<li>${esc(note)}</li>`).join('')}</ul><h3>Project decisions</h3><ul>${commonNotes.map(note => `<li>${esc(note)}</li>`).join('')}</ul><h3>Snapshot</h3><p>${esc(state.version.displayId || state.version.id)} · ${esc(state.version.label)}<br>${esc(state.version.date || '')}</p>`;
   }
 
   function navigation() {
@@ -251,7 +251,7 @@
     $('page-title').textContent = page.label;
     $('page-number').textContent = String(pages.indexOf(page) + 1).padStart(2, '0');
     $('template-badge').hidden = page.kind !== 'template';
-    $('footer-version').textContent = `${state.version.id}${state.version === latest ? ' / latest' : ' / archived'}`;
+    $('footer-version').textContent = `${state.version.displayId || state.version.id}${state.version === latest ? ' / latest' : ' / archived'}`;
     notes();
   }
 

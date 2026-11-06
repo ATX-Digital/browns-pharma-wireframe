@@ -47,6 +47,19 @@ In Cloudflare Zero Trust, make sure the new Worker/hostname is covered by:
 
 Adding a client inside the wireframe grants project permission in D1; it does not edit the separate Cloudflare Access policy.
 
+The Worker also verifies the signed Access login token. Set these non-secret Worker variables using the application covering this hostname, then redeploy:
+
+- `WIREFRAME_ACCESS_TEAM_DOMAIN`: the team domain, such as `your-team.cloudflareaccess.com`.
+- `WIREFRAME_ACCESS_AUD`: the application's Audience (AUD) tag.
+
+Keep these in `wrangler.jsonc` under `vars`, or in the Worker's dashboard variables (`keep_vars` is enabled). Do not confuse them with the private Access service-token ID and secret used for local sync. A plain email header does not authenticate a request. Missing storage, missing login configuration, or an invalid token denies access.
+
+Use the repository's Worker deployment command, not a static Pages upload. Verify an anonymous visit reaches Cloudflare Access, an existing D1 administrator can edit and comment, and an authenticated email without project membership is denied. Check the Worker has both `WIREFRAME_CONTENT` and `WIREFRAME_MEDIA` bindings.
+
+### Browns hostname routing
+
+Browns uses an exact hostname Worker route (`browns-pharmacy-wireframe.stagingcloud.dev/*`) over the existing proxied DNS record. The Worker runs before assets and serves its own asset binding. Keep this route and shared bindings intact. The old `browns-pharma-wireframe` Pages production site now redirects to this protected hostname and automatic Git deployments are disabled. Historical Pages deployment URLs require separate Access protection; changing the production deployment does not change historical deployments.
+
 ## Upgrade change history and comment replies
 
 This release adds an admin **Changes** view and replies within comment threads. Local preview works immediately. Before publishing the updated Worker, inspect the existing shared database once:

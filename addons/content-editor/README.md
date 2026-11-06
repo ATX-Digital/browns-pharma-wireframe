@@ -158,6 +158,8 @@ The same D1 database and R2 bucket can be bound to every wireframe deployment. E
 
 ## Deploy as a Cloudflare Pages project
 
+This is an alternative setup for other installations. **Browns uses the Worker deployment in `DEPLOYMENT.md`; do not publish this repository as a static Pages site.** A source-directory upload without the built `_worker.js` bypasses the application entirely and cannot provide editing or authorization.
+
 The build writes `dist/_worker.js`, using Pages Functions advanced mode, alongside the static files.
 
 1. Create or open the Pages project and use `npm run build` as the build command and `dist` as the output directory.
@@ -171,7 +173,9 @@ For a CLI deployment, build first and then run `npx wrangler pages deploy dist -
 
 Cloudflare Access authenticates the email address; the shared D1 database then authorizes that email as either a global administrator or a client of this specific wireframe. All HTML snapshots, content, comments and media are denied when the authenticated email has no matching access record.
 
-Add a production Pages environment variable named `WIREFRAME_BOOTSTRAP_ADMINS` containing the first administrator email. Multiple addresses may be comma-separated. These bootstrap administrators are shared across every wireframe that uses the same environment setting and cannot be removed in the UI; change the environment variable to remove one.
+Configure `WIREFRAME_ACCESS_TEAM_DOMAIN` (for example `your-team.cloudflareaccess.com`) and `WIREFRAME_ACCESS_AUD` (the application's Audience tag) on the Worker. These public identifiers let it verify Access tokens against the team's signing keys, expected issuer, audience and expiry. It does not trust an email header on its own. Missing configuration or storage fails closed. Sync uses its separate secret and the Access Service Auth policy.
+
+For a brand-new shared database with no administrators, a temporary Worker environment variable named `WIREFRAME_BOOTSTRAP_ADMINS` can contain the first administrator email. Browns already has shared D1 administrators and does not need this variable. Multiple bootstrap addresses may be comma-separated; these accounts cannot be removed in the UI. Remove the variable after creating the intended D1 administrators.
 
 After applying `0002_access.sql`, adding the environment variable and redeploying, sign in with a bootstrap administrator. The **Manage access** button lists all global administrators and the clients assigned to the current `editor.projectId`. Administrators added in the UI are stored in D1 and are available across all wireframes using that database. Clients are stored against only the current project ID.
 

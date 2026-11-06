@@ -4,10 +4,14 @@
   "keep_vars": true,
   "workers_dev": false,
   "preview_urls": false,
+  "vars": {
+    "WIREFRAME_ACCESS_TEAM_DOMAIN": "plain-block-eeb7.cloudflareaccess.com",
+    "WIREFRAME_ACCESS_AUD": "8c718840b498eabff816e2a86abb765d7f5e76567d6b448c3180c10c2c62a416"
+  },
   "routes": [
     {
-      "pattern": "browns-pharmacy-wireframe.stagingcloud.dev",
-      "custom_domain": true
+      "pattern": "browns-pharmacy-wireframe.stagingcloud.dev/*",
+      "zone_name": "stagingcloud.dev"
     }
   ],
   "main": "./addons/content-editor/worker/index.js",

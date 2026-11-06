@@ -78,7 +78,17 @@ assert.equal(run('BOARD.length'),8);
 assert.equal(run('ANNOUNCEMENTS.length'),42);
 assert.equal(run('FINANCIAL_REPORTS.length'),9);
 assert.equal(run("DOCTORS.filter(d=>d.practices.some(p=>p.branch==='pharmacy-swieqi')).length"),29);
-assert.ok(goto('services').includes('13 services'));
+assert.ok(goto('services').includes('Explore our services.'));
+assert.ok(!goto('services').includes('Search all services'));
+assert.ok(goto('service?id=oral-microbiome').includes('Start with a home sampling kit'));
+assert.ok(!goto('service?id=gut-microbiome').includes('Travel time preview'));
+assert.ok(goto('book?service=oral-microbiome').includes('do not need to choose a pharmacy appointment'));
+assert.ok(goto('service?id=onda-pro').includes('BMI assessment'));
+assert.ok(goto('service?id=schwarzy').includes('30–45 minutes'));
+assert.ok(goto('service?id=skin-rejuvenation').includes('RED TOUCH PRO'));
+assert.ok(goto('service?id=allergy-test').includes('€65'));
+assert.ok(goto('service?id=laser-hair-removal').includes('2142 2999'));
+
 assert.ok(goto('pharmacy?id=pharmacy-swieqi').includes('29 visiting practitioners'));
 assert.ok(goto('doctors?specialty=Family%20Medicine').includes('View doctor'));
 assert.ok(!goto('architecture').includes('Reference basis'));
@@ -117,10 +127,24 @@ assert.ok(comparison.includes('type="range"'));
 run("globalThis.sliderTest={value:'75',closest(){return {style:{setProperty(k,v){globalThis.clipValue=v}}}},setAttribute(k,v){globalThis.sliderDescription=v}};updateComparison(sliderTest)");
 assert.equal(run('clipValue'),'75%');assert.equal(run('sliderDescription'),'75% before image revealed');
 run("moveComparison({clientX:150},{getBoundingClientRect(){return {left:100,width:200}},closest(){return {querySelector(){return sliderTest}}}})");assert.equal(run('clipValue'),'25%');
-// Travel time demonstrations never masquerade as a location-derived estimate.
-run("travelPreviewMode='driving'");assert.ok(goto('pharmacies').includes('not calculated from your location'));assert.ok(node('app').innerHTML.includes('min drive'));
-run("travelPreviewMode='walking'");assert.ok(goto('service?id=laser-hair-removal').includes('min walk'));
-run("travelPreviewMode=''");assert.ok(!goto('pharmacies').includes('min drive'));
+// Service discovery is direct by default; the category filter is optional.
+const finder=goto('home');
+assert.ok(finder.includes('Health or Beauty'));
+assert.ok(!finder.includes('Health or Beauty (optional)'));
+assert.ok(!run('header()').includes('Health or Beauty'));
+
+assert.ok(finder.includes('<option value="" selected>Select</option>'));
+submit('finder',{category:'',service:'onda-pro'});
+assert.equal(run('params.get("id")'),'onda-pro');
+const servicePicker={value:'onda-pro',innerHTML:''};
+const categoryTarget={dataset:{change:'finder-category'},value:'health',form:{dataset:{form:'finder'},elements:{service:servicePicker}}};
+function changeFinder(value){categoryTarget.value=value;for(const fn of listeners.document.change||[])fn({target:categoryTarget});}
+changeFinder('health');assert.ok(servicePicker.innerHTML.includes('Health Check'));assert.ok(!servicePicker.innerHTML.includes('ONDA PRO'));assert.equal(servicePicker.value,'');
+changeFinder('beauty');assert.ok(servicePicker.innerHTML.includes('ONDA PRO'));assert.ok(!servicePicker.innerHTML.includes('Health Check'));
+servicePicker.value='onda-pro';changeFinder('');assert.ok(servicePicker.innerHTML.includes('Health Check'));assert.ok(servicePicker.innerHTML.includes('ONDA PRO'));assert.equal(servicePicker.value,'onda-pro');
+
+// Removed travel-time preview does not reappear in the pharmacy directory.
+assert.ok(!goto('pharmacies').includes('Travel time preview'));
 
 // Shop filters intersect, keep their context, and reset pagination after a new search.
 const cards=body=>[...body.matchAll(/data-product="([^"]+)"/g)].map(m=>m[1]);

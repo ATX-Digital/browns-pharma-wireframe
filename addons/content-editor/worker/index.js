@@ -54,12 +54,45 @@ async function manifest(request, env) {
   return JSON.parse(match[1].replace(/;\s*$/, ''));
 }
 
-async function identity(request, context) {
+const accessKeys = new Map();
+async function identity(request, context, env) {
+  // A trusted Access middleware may supply a verified identity directly.
   if (context.access) {
     const found = await context.access.getIdentity();
     if (found?.email) return normalizeEmail(found.email);
   }
-  return normalizeEmail(request.headers.get('cf-access-authenticated-user-email'));
+  // Email headers alone are spoofable if the hostname's Access policy is missing.
+  const team = String(env.WIREFRAME_ACCESS_TEAM_DOMAIN || '').replace(/^https:\/\//, '').replace(/\/$/, '');
+  const audience = String(env.WIREFRAME_ACCESS_AUD || '');
+  const token = request.headers.get('cf-access-jwt-assertion') || '';
+  if (!/^[a-z0-9-]+\.cloudflareaccess\.com$/.test(team) || !audience || !token || token.length > 16384) return '';
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return '';
+    const bytes = text => Uint8Array.from(atob(text.replace(/-/g, '+').replace(/_/g, '/')), character => character.charCodeAt(0));
+    const header = JSON.parse(new TextDecoder().decode(bytes(parts[0])));
+    if (header.alg !== 'RS256' || typeof header.kid !== 'string') return '';
+    const now = Date.now();
+    let cached = accessKeys.get(team);
+    if (!cached || cached.expires < now || !cached.keys.some(key => key.kid === header.kid)) {
+      const response = await fetch(`https://${team}/cdn-cgi/access/certs`);
+      if (!response.ok) return '';
+      const body = await response.json();
+      if (!Array.isArray(body.keys)) return '';
+      cached = {keys:body.keys, expires:now + 300000};
+      accessKeys.set(team, cached);
+    }
+    const jwk = cached.keys.find(key => key.kid === header.kid && key.kty === 'RSA');
+    if (!jwk) return '';
+    const key = await crypto.subtle.importKey('jwk', jwk, {name:'RSASSA-PKCS1-v1_5', hash:'SHA-256'}, false, ['verify']);
+    if (!await crypto.subtle.verify('RSASSA-PKCS1-v1_5', key, bytes(parts[2]), new TextEncoder().encode(parts[0]+'.'+parts[1]))) return '';
+    const claims = JSON.parse(new TextDecoder().decode(bytes(parts[1])));
+    const seconds = Math.floor(now / 1000);
+    if (claims.iss !== `https://${team}` || !Array.isArray(claims.aud) || !claims.aud.includes(audience) ||
+        typeof claims.exp !== 'number' || claims.exp <= seconds || (claims.nbf !== undefined && (typeof claims.nbf !== 'number' || claims.nbf > seconds))) return '';
+    const email = normalizeEmail(claims.email);
+    return validEmail(email) ? email : '';
+  } catch { return ''; }
 }
 
 function bootstrapAdmins(env) {
@@ -176,7 +209,7 @@ async function api(request, env, context) {
   }
 
   const syncMediaRequest = endpoint.startsWith('/api/editor/media/') && request.method === 'GET' && await validSyncToken(request, env);
-  const user = syncMediaRequest ? '' : await identity(request, context);
+  const user = syncMediaRequest ? '' : await identity(request, context, env);
   const access = syncMediaRequest
     ? {authorized:true, role:'sync', bootstrap:false}
     : (project.editor?.accessControl === false
@@ -345,15 +378,15 @@ export default {
     try {
       const url = new URL(request.url);
       if (url.pathname.startsWith('/api/editor/')) return await api(request, env, context);
-      if (env.WIREFRAME_CONTENT && /^(?:\/|\/index\.html|\/project\.js|\/versions\/[^/]+\.html)$/.test(url.pathname)) {
-        const project = await manifest(request, env);
-        if (project.editor?.enabled && project.editor?.accessControl !== false) {
-          const user = await identity(request, context);
-          const projectId = project.editor?.projectId || project.slug;
-          const access = await accessFor(env.WIREFRAME_CONTENT, env, projectId, user);
-          if (!access.authorized) return forbiddenPage(user, project.name);
-        }
-      }
+      // Never serve a public fallback when storage or authentication is missing.
+      // Protect every asset path, including extensionless snapshot URLs.
+      if (!env.WIREFRAME_CONTENT) return json({error:'Project access storage is unavailable.'}, 503);
+      const project = await manifest(request, env);
+      const user = await identity(request, context, env);
+      if (!user) return json({error:'Authentication is required.'}, 401);
+      const projectId = project.editor?.projectId || project.slug;
+      const access = await accessFor(env.WIREFRAME_CONTENT, env, projectId, user);
+      if (!access.authorized) return forbiddenPage(user, project.name);
       return env.ASSETS.fetch(request);
     } catch (error) {
       return json({error:error instanceof Error ? error.message : 'Unexpected editor error.'}, 500);

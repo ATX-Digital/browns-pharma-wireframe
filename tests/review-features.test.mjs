@@ -43,7 +43,7 @@ async function makeWorker() {
     ASSETS:{async fetch(url) { return new Response(new URL(url).pathname === '/project.js' ? source(project) : snapshot); }}
   };
   return {foreignId, async call(endpoint, method = 'GET', body, user = 'admin@example.test', headers = {}) {
-    const response = await worker.fetch(new Request(`https://review.test/api/editor/${endpoint}`, {method, headers:{'content-type':'application/json', ...(user ? {'cf-access-authenticated-user-email':user} : {}), ...headers}, ...(body === undefined ? {} : {body:JSON.stringify(body)})}), env, {});
+    const response = await worker.fetch(new Request(`https://review.test/api/editor/${endpoint}`, {method, headers:{'content-type':'application/json', ...(user ? {'cf-access-authenticated-user-email':user} : {}), ...headers}, ...(body === undefined ? {} : {body:JSON.stringify(body)})}), env, {access:{async getIdentity(){return user ? {email:user} : null;}}});
     return {status:response.status, data:await response.json()};
   }, async close() { db.close(); }};
 }
@@ -142,3 +142,38 @@ for (const [name, factory] of [['Worker with real SQLite', makeWorker], ['Local 
     } finally { await api.close(); }
   });
 }
+
+
+test('Worker refuses public assets when storage, login or project membership is missing', async () => {
+  const emptyDatabase={prepare(){return {bind(){return this;},async first(){return null;}};}};
+  const env={ASSETS:{async fetch(url){return new Response(new URL(url instanceof Request?url.url:url).pathname==='/project.js'?source(project):'PRIVATE ASSET');}}};
+  for(const pathname of ['/', '/index.html', '/versions/v1.html', '/versions/v1', '/project.js', '/assets/viewer.js']){
+    const request=new Request('https://review.test'+pathname);
+    assert.equal((await worker.fetch(request,env,{})).status,503);
+    assert.equal((await worker.fetch(request,{...env,WIREFRAME_CONTENT:emptyDatabase},{})).status,401);
+    const unlisted=new Request(request,{headers:{'cf-access-authenticated-user-email':'unlisted@example.test'}});
+    assert.equal((await worker.fetch(unlisted,{...env,WIREFRAME_CONTENT:emptyDatabase},{access:{async getIdentity(){return {email:'unlisted@example.test'};}}})).status,403);
+  }
+});
+
+
+test('Worker validates signed Access identity and rejects spoofed email headers', async () => {
+  const pair=await crypto.subtle.generateKey({name:'RSASSA-PKCS1-v1_5',modulusLength:2048,publicExponent:new Uint8Array([1,0,1]),hash:'SHA-256'},true,['sign','verify']);
+  const jwk=await crypto.subtle.exportKey('jwk',pair.publicKey);jwk.kid='access-test-key';
+  const originalFetch=globalThis.fetch;
+  globalThis.fetch=async url=>{assert.equal(url,'https://wireframe-test.cloudflareaccess.com/cdn-cgi/access/certs');return Response.json({keys:[jwk]});};
+  const env={WIREFRAME_ACCESS_TEAM_DOMAIN:'wireframe-test.cloudflareaccess.com',WIREFRAME_ACCESS_AUD:'test-audience',WIREFRAME_BOOTSTRAP_ADMINS:'admin@example.test',WIREFRAME_CONTENT:{},ASSETS:{async fetch(url){return new Response(new URL(url instanceof Request?url.url:url).pathname==='/project.js'?source(project):'PRIVATE ASSET');}}};
+  const claims={email:'admin@example.test',iss:'https://wireframe-test.cloudflareaccess.com',aud:['test-audience'],exp:Math.floor(Date.now()/1000)+300};
+  const encoded=value=>Buffer.from(JSON.stringify(value)).toString('base64url');
+  async function signed(payload){const content=encoded({alg:'RS256',kid:jwk.kid})+'.'+encoded(payload);const signature=await crypto.subtle.sign('RSASSA-PKCS1-v1_5',pair.privateKey,new TextEncoder().encode(content));return content+'.'+Buffer.from(signature).toString('base64url');}
+  async function call(token,settings=env){return worker.fetch(new Request('https://review.test/versions/v1',{headers:{'cf-access-authenticated-user-email':'admin@example.test',...(token?{'cf-access-jwt-assertion':token}:{})}}),settings,{});}
+  try{
+    assert.equal((await call()).status,401);
+    const token=await signed(claims);
+    assert.equal((await call(token)).status,200);
+    assert.equal((await call(token,{...env,WIREFRAME_ACCESS_AUD:''})).status,401);
+    assert.equal((await call(await signed({...claims,aud:['another-project']}))).status,401);
+    assert.equal((await call(await signed({...claims,exp:1}))).status,401);
+    assert.equal((await call(token.slice(0,-10)+'invalidsig')).status,401);
+  }finally{globalThis.fetch=originalFetch;}
+});
